@@ -1,47 +1,55 @@
-#pragma once
+#ifndef CAMERA_HPP
+#define CAMERA_HPP
+
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <chrono>
 
-
-struct GLFWwindow;
-
-
-class Camera
+namespace Engine
 {
+    class Camera
+    {
+    public:
+        Camera(glm::vec3 eye, glm::vec3 lookAt, float fov, glm::ivec2 screenDimensions);
 
-public:
-	Camera(const glm::vec3& vPos, uint16_t uScreenWidth, uint16_t uSreenHeight);
-	void MouseControl(GLFWwindow* window);
-	void KeyboardControl(GLFWwindow* window, std::chrono::duration<float> tFrameTime);
-	void ChangeProgramID();
-	void SetPos(const glm::vec3& vNewPos);
-	const glm::mat4& GetProjMat() const;
-	const glm::mat4& GetViewMat() const;
+        glm::mat4 getProjectionMatrix();
+        glm::mat4 getViewMatrix();
+        glm::mat4 getViewportMatrix();
 
-	const glm::vec3& GetPos() const ;
+        const glm::vec3& getPos() const;
+        const glm::vec3& getFront() const;
 
-private:
-	unsigned uProgId;
-	glm::vec3 CameraPos;
-	glm::vec3 CameraFront = glm::vec3(1.0f, 0.0f, 0.0f);
-	glm::vec3 CameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        void OnKeyChanged(int key, int scanCode, int action, int mod);
+        void OnMouseButtonChanged(int button, int action, int mods);
+        bool OnCursorPositionChanged(double xpos, double ypos);
+        void OnBeforeRender();
+        void move();
+        void update();
+        void resize(float fov, glm::ivec2 screenDimensions);
+    private:
+        const glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	glm::mat4 view = glm::mat4(1.0f);
-	glm::mat4 proj;
+        glm::vec3 pos;
+        glm::vec3 forward;
+        glm::vec3 up;
+        glm::vec3 right;
 
-	uint16_t uScreenWidth;
-	uint16_t uScreenHeight;
+        glm::ivec2 screenDimensions;
+        glm::ivec2 halfScreenDimensions;
+        float aspect;
+        float fov;
+        float yaw, pitch;
 
-	bool bFirst = true;
+        const float speed = 0.05f; 
 
-	uint16_t uLastX;
-	uint16_t uLastY;
-	int16_t iDeltaX;
-	int16_t iDeltaY;
-	float fYaw = 0;
-	float fPitch = 0;
+        bool isCameraLeft = false;
+		bool isCameraRight = false;
+		bool isCameraUp = false;
+		bool isCameraDown = false;
+        bool isCameraForward = false;
+        bool isCameraBackward = false;
+		bool isMousePressed = false;
 
-};
+        glm::mat4 viewport;
+    };
+}
 
+#endif

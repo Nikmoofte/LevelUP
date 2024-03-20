@@ -10,29 +10,36 @@
 #include <EBO/EBO.hpp>
 #include <Renderer/Renderer.hpp>
 #include <Camera/Camera.hpp>
+#include <Mesh/Mesh.hpp>
+#include <memory>
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-#include "implot.h"
-#include "implot_internal.h"
+
+#include <glm/gtc/type_ptr.hpp>
 
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+void cursorPosChanged(GLFWwindow* window, double xpos, double ypos);
+void mouseButtonPressed(GLFWwindow* window, int button, int action, int mods);
+void keyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+std::unique_ptr<Engine::Camera> cam;
 
 int main()
 {
     using namespace std;
     cout << sizeof(Shader) << " " << sizeof(Shader::ShaderType) << endl;
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
@@ -43,7 +50,7 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetWindowSizeCallback(window, framebuffer_size_callback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -53,17 +60,16 @@ int main()
     
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
+    ImGui_ImplOpenGL3_Init("#version 460");
 
     ShaderProg base("../shaders/Base.vs", "../shaders/Base.fs");
-
+    base.Use();
     float vertices[] = {
         0.5f,  0.5f, 0.0f,  // top right
         0.5f, -0.5f, 0.0f,  // bottom right
@@ -75,28 +81,52 @@ int main()
         1, 2, 3   // second Triangle
     };
 
-    VBO square;
+    Assets::Mesh mesh("../assets/models/Chariot.obj");
+
+    VBO object;
     VAO va;
+    mesh.Wait();
     VBLayout vbl;
-    square.SetBufferData(sizeof(vertices), vertices, GL_STATIC_DRAW);
+    object.SetBufferData(mesh.getVerticesSize(), &mesh.getVertices().front(), GL_STATIC_DRAW);
 
     vbl.Push<float>(3);
-    va.setLayout(square, vbl);
+    vbl.Push<float>(3);
+    vbl.Push<float>(2);
+
+    va.setLayout(object, vbl);
     EBO eb;
-    eb.SetBufferData(sizeof(indices) / sizeof(*indices), indices, GL_STATIC_DRAW);
+    eb.SetBufferData(mesh.getIndeciesSize(), &mesh.getIndecies().front(), GL_STATIC_DRAW);
     
+    cam = std::make_unique<Engine::Camera>(glm::vec3{0.0f}, glm::vec3{1.0f, 0.0f, 0.0f}, glm::radians(90.0f), glm::ivec2{SCR_WIDTH, SCR_HEIGHT});
+    glfwSetCursorPosCallback(window, cursorPosChanged);
+    glfwSetMouseButtonCallback(window, mouseButtonPressed);
+    glfwSetKeyCallback(window, keyPressed);
+
+
+    glm::mat4 proj = cam->getProjectionMatrix();
+    //glUniformMatrix4fv(base.GetLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj));
+      
     glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
+
+    glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window))
     {
-        processInput(window);
+        cam->OnBeforeRender();
+        glm::mat4 view = cam->getViewMatrix();
+        // glUniformMatrix4fv(base.GetLocation("view"), 1, GL_FALSE, glm::value_ptr(view));
+        // glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(mesh.getModelMat()));
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        glm::mat4 model = mesh.getModelMat();
+        //#todo Завтавить объект крутиться изменяя model
 
-        ImPlot::ShowDemoWindow();
 
-
+        //дальше трогать не требуется
+        mesh.setModelMat(model);
+        glm::mat4 total = proj * view * mesh.getModelMat(); 
+        glUniformMatrix4fv(base.GetLocation("total"), 1, GL_FALSE, glm::value_ptr(total));
         Renderer::Clear();
         Renderer::Draw(va, eb, base);
 
@@ -131,9 +161,32 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 }
 
+void cursorPosChanged(GLFWwindow *window, double xpos, double ypos)
+{
+    if(cam.get())
+        cam->OnCursorPositionChanged(xpos, ypos);
+}
+
+void mouseButtonPressed(GLFWwindow *window, int button, int action, int mods)
+{
+    if(cam.get())
+        cam->OnMouseButtonChanged(button, action, mods);
+}
+
+void keyPressed(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    if(cam.get())
+        cam->OnKeyChanged(key, scancode, action, mods);
+
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+    auto c = cam.get(); 
+    if(c != nullptr)
+        c->resize(glm::radians(90.0f), {width, height});
 }
 

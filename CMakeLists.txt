@@ -3,16 +3,20 @@ project(WinOPGLProj)
 
 set(ClassesDir src/classes/)
 set(ImguiPath deps/imgui/)
-set(ImplotPath deps/implot/)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(Classes 
     ${ClassesDir}Camera/Camera.cpp
     ${ClassesDir}ShaderProg/ShaderProg.cpp
+    ${ClassesDir}Shader/Shader.cpp
     ${ClassesDir}Renderer/Renderer.cpp
     ${ClassesDir}VBO/VBO.cpp
     ${ClassesDir}VAO/VAO.cpp
     ${ClassesDir}VAO/VBlayout.cpp
     ${ClassesDir}EBO/EBO.cpp
+    ${ClassesDir}Mesh/Mesh.cpp
 
     ${ImguiPath}imgui_demo.cpp
     ${ImguiPath}imgui_draw.cpp
@@ -21,20 +25,17 @@ set(Classes
     ${ImguiPath}imgui.cpp
     ${ImguiPath}backends/imgui_impl_opengl3.cpp
     ${ImguiPath}backends/imgui_impl_glfw.cpp
-
-    ${ImplotPath}implot_items.cpp
-    ${ImplotPath}implot.cpp
-    ${ImplotPath}implot_demo.cpp
 )
 
 add_executable(main src/main.cpp include/glad/glad.c include/stb_image/stb_image.cpp ${Classes})
 
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/glm)
-target_link_libraries(main PUBLIC glfw)
-target_link_libraries(main PUBLIC glm)
-target_link_libraries(main PUBLIC opengl32)
+add_subdirectory(deps/tinyobjloader)
+target_link_libraries(main PUBLIC glfw
+                                tinyobjloader
+                                glm
+                                opengl32)
 target_include_directories(main PUBLIC include)
 target_include_directories(main PUBLIC ${ClassesDir})
 target_include_directories(main PUBLIC ${ImguiPath})
-target_include_directories(main PUBLIC ${ImplotPath})
