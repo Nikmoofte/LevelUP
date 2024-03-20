@@ -51,35 +51,18 @@ int main()
     }
     glfwMakeContextCurrent(window);
     glfwSetWindowSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, cursorPosChanged);
+    glfwSetMouseButtonCallback(window, mouseButtonPressed);
+    glfwSetKeyCallback(window, keyPressed);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 460");
 
     ShaderProg base("../shaders/Base.vs", "../shaders/Base.fs");
     base.Use();
-    float vertices[] = {
-        0.5f,  0.5f, 0.0f,  // top right
-        0.5f, -0.5f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  // bottom left
-        -0.5f,  0.5f, 0.0f   // top left 
-    };
-    unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3,  // first Triangle
-        1, 2, 3   // second Triangle
-    };
 
     Assets::Mesh mesh("../assets/models/Chariot.obj");
 
@@ -98,27 +81,21 @@ int main()
     eb.SetBufferData(mesh.getIndeciesSize(), &mesh.getIndecies().front(), GL_STATIC_DRAW);
     
     cam = std::make_unique<Engine::Camera>(glm::vec3{0.0f}, glm::vec3{1.0f, 0.0f, 0.0f}, glm::radians(90.0f), glm::ivec2{SCR_WIDTH, SCR_HEIGHT});
-    glfwSetCursorPosCallback(window, cursorPosChanged);
-    glfwSetMouseButtonCallback(window, mouseButtonPressed);
-    glfwSetKeyCallback(window, keyPressed);
 
 
-    glm::mat4 proj = cam->getProjectionMatrix();
     //glUniformMatrix4fv(base.GetLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj));
-      
+    glUniform3fv(base.GetLocation("lightPos"), 1, glm::value_ptr(glm::vec3(-5.0f, 5.0f, -5.0f)));  
     glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
-
+    glEnable(GL_DEPTH_TEST);
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window))
     {
         cam->OnBeforeRender();
+        glm::mat4 proj = cam->getProjectionMatrix();
         glm::mat4 view = cam->getViewMatrix();
         // glUniformMatrix4fv(base.GetLocation("view"), 1, GL_FALSE, glm::value_ptr(view));
-        // glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(mesh.getModelMat()));
+        glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(mesh.getModelMat()));
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
         glm::mat4 model = mesh.getModelMat();
         //#todo Завтавить объект крутиться изменяя model
 
@@ -130,23 +107,9 @@ int main()
         Renderer::Clear();
         Renderer::Draw(va, eb, base);
 
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            GLFWwindow* backup_current_context = glfwGetCurrentContext();
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-            glfwMakeContextCurrent(backup_current_context);
-        }
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
 
