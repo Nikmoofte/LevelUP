@@ -5,12 +5,13 @@
 #include <cstddef>
 #include <string>
 #include <unordered_map>
+#include <filesystem>
 
 
 class ShaderProg
 {
 public:
-    ShaderProg(const std::string& vertexFilepath, const std::string& fragmentFilepath);
+    ShaderProg(const std::filesystem::path& vertexFilepath, const std::filesystem::path& fragmentFilepath);
     ShaderProg(const ShaderProg&);
     ~ShaderProg();
 
@@ -20,7 +21,7 @@ public:
     GLint GetLocation(const std::string& name);
 private:
     GLuint CreateProgram(const std::string& vertexSource, const std::string& fragmentSource);
-    std::string GetSourceFromFile(const std::string& filePath);
+    std::string GetSourceFromFile(const std::filesystem::path& filePath);
     std::unordered_map<std::string, int> UniformLocCache;
     GLuint id;
 };

@@ -18,7 +18,8 @@
 #include "backends/imgui_impl_opengl3.h"
 
 #include <glm/gtc/type_ptr.hpp>
-
+#include "path.hpp"
+#include "config.hpp"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -61,16 +62,18 @@ int main()
         return -1;
     }
 
-    ShaderProg base("../shaders/Base.vs", "../shaders/Base.fs");
+    OUTPUT_IF_DEBUG_(Path::Get().fromRoot({"shaders", "Base.vs"}).string());
+    OUTPUT_IF_DEBUG_(Path::Get().fromRoot({"shaders", "Base.fs"}).string());
+    ShaderProg base(Path::Get().fromRoot({"shaders", "Base.vs"}), Path::Get().fromRoot({"shaders", "Base.fs"}));
     base.Use();
 
-    Assets::Mesh mesh("../assets/models/Chariot.obj");
+    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Cube.obj"}).string());
 
     VBO object;
     VAO va;
     mesh.Wait();
     VBLayout vbl;
-    object.SetBufferData(mesh.getVerticesSize(), &mesh.getVertices().front(), GL_STATIC_DRAW);
+    object.SetBufferData(mesh.getVerticesSize(), mesh.getVertices().data(), GL_STATIC_DRAW);
 
     vbl.Push<float>(3);
     vbl.Push<float>(3);
@@ -78,7 +81,7 @@ int main()
 
     va.setLayout(object, vbl);
     EBO eb;
-    eb.SetBufferData(mesh.getIndeciesSize(), &mesh.getIndecies().front(), GL_STATIC_DRAW);
+    eb.SetBufferData(mesh.getIndeciesSize(), mesh.getIndecies().data(), GL_STATIC_DRAW);
     
     cam = std::make_unique<Engine::Camera>(glm::vec3{0.0f}, glm::vec3{1.0f, 0.0f, 0.0f}, glm::radians(90.0f), glm::ivec2{SCR_WIDTH, SCR_HEIGHT});
 

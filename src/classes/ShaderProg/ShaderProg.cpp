@@ -7,7 +7,9 @@
 
 #include "Shader/Shader.hpp"
 
-ShaderProg::ShaderProg(const std::string &vertexFilepath, const std::string &fragmentFilepath)
+using namespace std::filesystem;
+
+ShaderProg::ShaderProg(const path &vertexFilepath, const path &fragmentFilepath)
 {
     id = CreateProgram(GetSourceFromFile(vertexFilepath), GetSourceFromFile(fragmentFilepath));
 }
@@ -74,7 +76,7 @@ unsigned ShaderProg::CreateProgram(const std::string &vertexSource, const std::s
     return shaderProgram;
 }
 
-std::string ShaderProg::GetSourceFromFile(const std::string &filePath)
+std::string ShaderProg::GetSourceFromFile(const path &filePath)
 {
     std::ifstream in(filePath);
     std::stringstream sIn;

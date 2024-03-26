@@ -4,8 +4,12 @@ project(WinOPGLProj)
 set(ClassesDir src/classes/)
 set(ImguiPath deps/imgui/)
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512bw -mavx512cd -mavx512dq")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(Classes 
     ${ClassesDir}Camera/Camera.cpp
