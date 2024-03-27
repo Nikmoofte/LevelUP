@@ -69,7 +69,11 @@ int main()
     ShaderProg base(Path::Get().fromRoot({"shaders", "Base.vs"}), Path::Get().fromRoot({"shaders", "Base.fs"}));
     base.Use();
 
-    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Chariot.obj"}).string());
+    //Изменяя строчку с .obj можно выьрать другой объект для отрисовки
+    //ToDo попробовать другие объекты
+    //https://sketchfab.com/feed -- здесь можно найти другие модельки. Нужны именно .obj
+    //Можно просто выбрать из тех которые в папке 
+    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Monkey.obj"}).string());
 
     VBO object;
     VAO va;
