@@ -73,7 +73,7 @@ int main()
     //ToDo попробовать другие объекты
     //https://sketchfab.com/feed -- здесь можно найти другие модельки. Нужны именно .obj
     //Можно просто выбрать из тех которые в папке 
-    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Monkey.obj"}).string());
+    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Cube.obj"}).string());
 
     VBO object;
     VAO va;
@@ -90,7 +90,7 @@ int main()
     EBO eb;
     eb.SetBufferData(mesh.getIndeciesSize(), mesh.getIndecies().data(), GL_STATIC_DRAW);
     
-
+    //Тут можно ворочать свет, если надо
     glUniform3fv(base.GetLocation("lightPos"), 1, glm::value_ptr(glm::vec3(-5.0f, 5.0f, -5.0f)));  
     glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
     glEnable(GL_DEPTH_TEST);
