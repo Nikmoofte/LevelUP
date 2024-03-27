@@ -21,6 +21,7 @@ set(Classes
     ${ClassesDir}VAO/VBlayout.cpp
     ${ClassesDir}EBO/EBO.cpp
     ${ClassesDir}Mesh/Mesh.cpp
+    ${ClassesDir}Window/Window.cpp
 
     ${ImguiPath}imgui_demo.cpp
     ${ImguiPath}imgui_draw.cpp

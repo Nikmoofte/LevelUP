@@ -11,13 +11,16 @@
 #include <Renderer/Renderer.hpp>
 #include <Camera/Camera.hpp>
 #include <Mesh/Mesh.hpp>
+#include <Window/Window.hpp>
 #include <memory>
+#include <chrono>
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "path.hpp"
 #include "config.hpp"
 
@@ -32,42 +35,41 @@ void keyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-std::unique_ptr<Engine::Camera> cam;
+
+//ToDo Попробовать поиграться с цветом
+//https://openframeworks.cc/documentation/glm/
+const glm::vec3 modelColor{0.5f};
+//settings end
+
+
+float fov = glm::radians(90.0f);
+std::chrono::time_point<std::chrono::system_clock> beg = std::chrono::system_clock::now();
 
 int main()
 {
     using namespace std;
-    cout << sizeof(Shader) << " " << sizeof(Shader::ShaderType) << endl;
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
+    Viewer::Window window(SCR_WIDTH, SCR_HEIGHT);
+    Engine::Camera cam(glm::vec3{0.0f}, glm::vec3{1.0f, 0.0f, 0.0f}, fov, glm::ivec2{SCR_WIDTH, SCR_HEIGHT});
+    window.addOnCursorPositionChanged([&cam](double xpos, double ypos){cam.OnCursorPositionChanged(xpos, ypos);});
+    window.addOnKeyChanged([&cam, &window](int key, int scancode, int action, int mods)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
+        if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+            window.setWindowShouldClose(true);
+        cam.OnKeyChanged(key, scancode, action, mods);
     }
-    glfwMakeContextCurrent(window);
-    glfwSetWindowSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, cursorPosChanged);
-    glfwSetMouseButtonCallback(window, mouseButtonPressed);
-    glfwSetKeyCallback(window, keyPressed);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    );
+    window.addOnMouseButtonChanged([&cam](int button, int action, int mods){cam.OnMouseButtonChanged(button, action, mods);});
+    window.addOnResize([&cam](int width, int height)
     {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
+        glViewport(0, 0, width, height);
+        cam.resize(fov, {width, height});
     }
+    );
 
-    OUTPUT_IF_DEBUG_(Path::Get().fromRoot({"shaders", "Base.vs"}).string());
-    OUTPUT_IF_DEBUG_(Path::Get().fromRoot({"shaders", "Base.fs"}).string());
     ShaderProg base(Path::Get().fromRoot({"shaders", "Base.vs"}), Path::Get().fromRoot({"shaders", "Base.fs"}));
     base.Use();
 
-    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Cube.obj"}).string());
+    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Chariot.obj"}).string());
 
     VBO object;
     VAO va;
@@ -78,26 +80,26 @@ int main()
     vbl.Push<float>(3);
     vbl.Push<float>(3);
     vbl.Push<float>(2);
+    vbl.Push<float>(4);
 
     va.setLayout(object, vbl);
     EBO eb;
     eb.SetBufferData(mesh.getIndeciesSize(), mesh.getIndecies().data(), GL_STATIC_DRAW);
     
-    cam = std::make_unique<Engine::Camera>(glm::vec3{0.0f}, glm::vec3{1.0f, 0.0f, 0.0f}, glm::radians(90.0f), glm::ivec2{SCR_WIDTH, SCR_HEIGHT});
 
-
-    //glUniformMatrix4fv(base.GetLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform3fv(base.GetLocation("lightPos"), 1, glm::value_ptr(glm::vec3(-5.0f, 5.0f, -5.0f)));  
     glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glfwSwapInterval(1);
-    while (!glfwWindowShouldClose(window))
+    while (!window.shouldClose())
     {
-        cam->OnBeforeRender();
-        glm::mat4 proj = cam->getProjectionMatrix();
-        glm::mat4 view = cam->getViewMatrix();
-        // glUniformMatrix4fv(base.GetLocation("view"), 1, GL_FALSE, glm::value_ptr(view));
+        cam.OnBeforeRender();
+        glm::mat4 proj = cam.getProjectionMatrix();
+        glm::mat4 view = cam.getViewMatrix();
+        glUniform3fv(base.GetLocation("viewPos"), 1, glm::value_ptr(cam.getPos()));
         glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(mesh.getModelMat()));
+        std::chrono::duration<float> time = std::chrono::system_clock::now() - beg;
+        glUniform1f(base.GetLocation("time"), time.count());
 
         glm::mat4 model = mesh.getModelMat();
         //#todo Завтавить объект крутиться изменяя model
@@ -110,49 +112,11 @@ int main()
         Renderer::Clear();
         Renderer::Draw(va, eb, base);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        window.swapBuffers();
+        window.pollEvents();
     }
 
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
     return 0;
 }
 
-
-void processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-
-void cursorPosChanged(GLFWwindow *window, double xpos, double ypos)
-{
-    if(cam.get())
-        cam->OnCursorPositionChanged(xpos, ypos);
-}
-
-void mouseButtonPressed(GLFWwindow *window, int button, int action, int mods)
-{
-    if(cam.get())
-        cam->OnMouseButtonChanged(button, action, mods);
-}
-
-void keyPressed(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
-    if(cam.get())
-        cam->OnKeyChanged(key, scancode, action, mods);
-
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-    auto c = cam.get(); 
-    if(c != nullptr)
-        c->resize(glm::radians(90.0f), {width, height});
-}
 

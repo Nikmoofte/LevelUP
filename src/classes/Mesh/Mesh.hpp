@@ -16,7 +16,7 @@ namespace Assets
 		Mesh(const std::string& path, glm::mat4&& modelTransform);
 
 		void Wait();
-
+		
 		std::vector<Vertex>& getVertices() { return vertices; }
 		uint32_t getVerticesSize() const { return vertices.size() * sizeof(Vertex); }
 		std::vector<uint32_t>& getIndecies() { return indices; }
@@ -24,7 +24,7 @@ namespace Assets
 
 		const glm::mat4& getModelMat() const { return modelTransform; }
 		const glm::mat4& setModelMat(const glm::mat4& model) { return modelTransform = model; }
-
+		
 	private:
 		glm::mat4 modelTransform = glm::mat4(1.f);
 

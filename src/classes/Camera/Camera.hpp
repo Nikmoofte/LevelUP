@@ -10,10 +10,12 @@ namespace Engine
     public:
         Camera(glm::vec3 eye, glm::vec3 lookAt, float fov, glm::ivec2 screenDimensions);
 
+        //TODO
         glm::mat4 getProjectionMatrix();
         glm::mat4 getViewMatrix();
-        glm::mat4 getViewportMatrix();
+        //END TODO
 
+        glm::mat4 getViewportMatrix();
         const glm::vec3& getPos() const;
         const glm::vec3& getFront() const;
 

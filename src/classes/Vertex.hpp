@@ -5,6 +5,8 @@
 #include <glm/gtx/hash.hpp>
 #include <glm/glm.hpp>
 
+extern const glm::vec3 modelColor;
+
 namespace Assets
 {
     class Vertex 
@@ -13,6 +15,7 @@ namespace Assets
 		glm::vec3 position{};
 		glm::vec3 normal{};
 		glm::vec2 texCoords{};
+		glm::vec4 color{modelColor, 1.0f};
 
 		bool operator==(const Vertex& other) const
 		{

@@ -151,11 +151,16 @@ namespace Engine
 
     glm::mat4 Camera::getProjectionMatrix()
     {
-        return glm::perspective(fov, aspect, 0.1f, 100.0f);
+        //TODO вернуть матрицу проекции
+        //* Можно попробовать сделать ортагональную и посмотреть, что получиться
+        //https://learnopengl.com/Getting-started/Coordinate-Systems
+        return glm::perspective(fov, aspect, 1.0f, 100.0f);
     }
 
     glm::mat4 Camera::getViewMatrix()
     {
+        //TODO вернуть матрицу вида
+        //https://learnopengl.com/Getting-started/Camera
         return glm::lookAt(pos, pos + forward, up);
     }
     glm::mat4 Camera::getViewportMatrix()
