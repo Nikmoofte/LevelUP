@@ -24,7 +24,6 @@ namespace Assets
 	void Mesh::Load(const std::string& path)
 	{
         tinyobj::ObjReaderConfig reader_config;
-        reader_config.mtl_search_path = pathToMaterinals; // Path to material files
 
 		tinyobj::ObjReader reader;
 

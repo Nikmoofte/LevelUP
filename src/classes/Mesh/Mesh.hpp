@@ -32,8 +32,6 @@ namespace Assets
 		std::vector<uint32_t> indices;
 		std::future<void> loader{};
 
-		constexpr static char* pathToMaterinals = "./";
-
 		void Load(const std::string& path);
     };
 }
