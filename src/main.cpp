@@ -49,7 +49,7 @@ int main()
 {
     using namespace std;
     Viewer::Window window(SCR_WIDTH, SCR_HEIGHT);
-    Engine::Camera cam(glm::vec3{0.0f}, glm::vec3{1.0f, 0.0f, 0.0f}, fov, glm::ivec2{SCR_WIDTH, SCR_HEIGHT});
+    Engine::Camera cam(glm::vec3{3.0f, 0.0f, 0.0f}, glm::vec3{0.0f}, fov, glm::ivec2{SCR_WIDTH, SCR_HEIGHT});
     window.addOnCursorPositionChanged([&cam](double xpos, double ypos){cam.OnCursorPositionChanged(xpos, ypos);});
     window.addOnKeyChanged([&cam, &window](int key, int scancode, int action, int mods)
     {
