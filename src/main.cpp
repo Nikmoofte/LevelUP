@@ -49,7 +49,8 @@ int main()
 {
     using namespace std;
     Viewer::Window window(SCR_WIDTH, SCR_HEIGHT);
-    Engine::Camera cam(glm::vec3{3.0f, 0.0f, 0.0f}, glm::vec3{0.0f}, fov, glm::ivec2{SCR_WIDTH, SCR_HEIGHT});
+    window.setTitle("CGA");
+    Engine::Camera cam(glm::vec3{-5.0f, 5.0f, -5.0f}, glm::vec3{0.0f}, fov, glm::ivec2{SCR_WIDTH, SCR_HEIGHT});
     window.addOnCursorPositionChanged([&cam](double xpos, double ypos){cam.OnCursorPositionChanged(xpos, ypos);});
     window.addOnKeyChanged([&cam, &window](int key, int scancode, int action, int mods)
     {
@@ -95,13 +96,14 @@ int main()
     glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glfwSwapInterval(1);
+    mesh.setModelMat(glm::rotate(mesh.getModelMat(), glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+
     while (!window.shouldClose())
     {
         cam.OnBeforeRender();
         glm::mat4 proj = cam.getProjectionMatrix();
         glm::mat4 view = cam.getViewMatrix();
         glUniform3fv(base.GetLocation("viewPos"), 1, glm::value_ptr(cam.getPos()));
-        glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(mesh.getModelMat()));
         std::chrono::duration<float> time = std::chrono::system_clock::now() - beg;
         glUniform1f(base.GetLocation("time"), time.count());
 
@@ -111,7 +113,8 @@ int main()
 
         //дальше трогать не требуется
         mesh.setModelMat(model);
-        glm::mat4 total = proj * view * mesh.getModelMat(); 
+        glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(mesh.getModelMat()));
+        glm::mat4 total = proj * view; 
         glUniformMatrix4fv(base.GetLocation("total"), 1, GL_FALSE, glm::value_ptr(total));
         Renderer::Clear();
         Renderer::Draw(va, eb, base);

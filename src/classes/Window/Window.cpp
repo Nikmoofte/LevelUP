@@ -16,7 +16,7 @@ namespace Viewer
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-		window = glfwCreateWindow(width, height, "CPU Rasterizer", nullptr, nullptr);
+		window = glfwCreateWindow(width, height, "Window", nullptr, nullptr);
 
 		if (window == nullptr)
 		{

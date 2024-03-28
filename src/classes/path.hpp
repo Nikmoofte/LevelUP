@@ -26,13 +26,13 @@ private:
 	{
 		auto root = std::filesystem::current_path();
 		auto current = root.string();
-		while (current.contains("build"))
+		while (current.contains("LevelUP"))
 		{
 			root = root.parent_path();
 			current = root.string();
 		}
 
-		this->root = root;
+		this->root = root / "LevelUP";
 	}
 	std::filesystem::path root;
 };

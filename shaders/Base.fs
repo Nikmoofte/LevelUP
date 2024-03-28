@@ -16,7 +16,7 @@ void main()
 
     //ToDo Сделать свет по фонгу
     //https://learnopengl.com/Lighting/Basic-Lighting
-    
-    vec3 result =  vec3(Color);
+
+    vec3 result = vec3(Color);
     FragColor = vec4(result, Color.w);
 }
