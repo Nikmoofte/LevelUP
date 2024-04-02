@@ -24,13 +24,6 @@
 #include "path.hpp"
 #include "config.hpp"
 
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
-void cursorPosChanged(GLFWwindow* window, double xpos, double ypos);
-void mouseButtonPressed(GLFWwindow* window, int button, int action, int mods);
-void keyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
-
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -74,11 +67,13 @@ int main()
     //ToDo попробовать другие объекты
     //https://sketchfab.com/feed -- здесь можно найти другие модельки. Нужны именно .obj
     //Можно просто выбрать из тех которые в папке 
-    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Cube.obj"}).string());
+    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Giant Octopus.obj"}).string());
+    Assets::Mesh chariot(Path::Get().fromRoot({"assets", "models", "Chariot.obj"}).string());
 
     VBO object;
     VAO va;
     mesh.Wait();
+    chariot.Wait();
     VBLayout vbl;
     object.SetBufferData(mesh.getVerticesSize(), mesh.getVertices().data(), GL_STATIC_DRAW);
 
@@ -90,13 +85,22 @@ int main()
     va.setLayout(object, vbl);
     EBO eb;
     eb.SetBufferData(mesh.getIndeciesSize(), mesh.getIndecies().data(), GL_STATIC_DRAW);
+
+    VBO chariotVBO;
+    VAO chariotVa;
+
+    chariotVBO.SetBufferData(chariot.getVerticesSize(), chariot.getVertices().data(), GL_STATIC_DRAW);
+
+    chariotVa.setLayout(chariotVBO, vbl);
+    EBO chariotEb;
+    chariotEb.SetBufferData(chariot.getIndeciesSize(), chariot.getIndecies().data(), GL_STATIC_DRAW);
     
     //Тут можно ворочать свет, если надо
     glUniform3fv(base.GetLocation("lightPos"), 1, glm::value_ptr(glm::vec3(-5.0f, 5.0f, -5.0f)));  
     glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glfwSwapInterval(1);
-    mesh.setModelMat(glm::rotate(mesh.getModelMat(), glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+    chariot.setModelMat(glm::translate(mesh.getModelMat(), glm::vec3(10.0f, 0.0f, 0.0f)));
 
     while (!window.shouldClose())
     {
@@ -113,11 +117,13 @@ int main()
 
         //дальше трогать не требуется
         mesh.setModelMat(model);
-        glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(mesh.getModelMat()));
         glm::mat4 total = proj * view; 
         glUniformMatrix4fv(base.GetLocation("total"), 1, GL_FALSE, glm::value_ptr(total));
         Renderer::Clear();
+        glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(mesh.getModelMat()));
         Renderer::Draw(va, eb, base);
+        glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(chariot.getModelMat()));
+        Renderer::Draw(chariotVa, chariotEb, base);
 
         window.swapBuffers();
         window.pollEvents();

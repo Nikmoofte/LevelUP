@@ -7,6 +7,8 @@
 
 #include "Vertex.hpp"
 
+#include <glm/mat4x4.hpp>
+
 namespace Assets 
 {
     class Mesh 

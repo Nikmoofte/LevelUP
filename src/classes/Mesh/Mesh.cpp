@@ -10,7 +10,7 @@ namespace Assets
         loader = std::async(std::launch::async, &Mesh::Load, this, path);
     }
 
-    Mesh::Mesh(const std::string &path, glm::mat4 &&modelTransform) : modelTransform(modelTransform)
+    Mesh::Mesh(const std::string &path, glm::mat4 &&modelTransform) : Mesh(path)
     {
 		this->modelTransform = modelTransform;
     }
