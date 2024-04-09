@@ -13,15 +13,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(Classes 
     ${ClassesDir}Camera/Camera.cpp
-    ${ClassesDir}ShaderProg/ShaderProg.cpp
-    ${ClassesDir}Shader/Shader.cpp
     ${ClassesDir}Renderer/Renderer.cpp
     ${ClassesDir}VBO/VBO.cpp
     ${ClassesDir}VAO/VAO.cpp
     ${ClassesDir}VAO/VBlayout.cpp
     ${ClassesDir}EBO/EBO.cpp
     ${ClassesDir}Mesh/Mesh.cpp
-    ${ClassesDir}Window/Window.cpp
+
+    ${ClassesDir}Viewer/ShaderProg/ShaderProg.cpp
+    ${ClassesDir}Viewer/Shader/Shader.cpp
+    ${ClassesDir}Viewer/Window/Window.cpp
+    ${ClassesDir}Viewer/Menu/Menu.cpp
+    #${ClassesDir}Viewer/App/App.cpp
 
     ${ImguiPath}imgui_demo.cpp
     ${ImguiPath}imgui_draw.cpp

@@ -1,16 +1,39 @@
 #include "Mesh.hpp"
+
 #include <unordered_map>
+
 #include "tiny_obj_loader.h"
 
+#include "VAO/VBLayout.hpp"
+#include "Viewer/ShaderProg/ShaderProg.hpp"
+
+using Viewer::ShaderProg;
 namespace Assets
 {
-
-    Mesh::Mesh(const std::string &path)
+    Mesh::Mesh(const std::string &pathToObj, ShaderProg &&prog) : prog(std::make_unique<ShaderProg>(std::move(prog)))
     {
-        loader = std::async(std::launch::async, &Mesh::Load, this, path);
+		loader = std::async(std::launch::async, &Mesh::Load, this, pathToObj);
     }
 
-    Mesh::Mesh(const std::string &path, glm::mat4 &&modelTransform) : Mesh(path)
+    Mesh::Mesh(const std::string &pathToObj, const ShaderProg &prog) : prog(std::make_unique<ShaderProg>(prog))
+    {
+		loader = std::async(std::launch::async, &Mesh::Load, this, pathToObj);
+    }
+
+    Mesh::Mesh(
+		const std::string& pathToObj, 
+		const std::string& pathToVertShader, 
+		const std::string& pathToFragShader
+	) : Mesh(pathToObj, ShaderProg(pathToVertShader, pathToFragShader))
+    {
+    }
+
+    Mesh::Mesh(
+		const std::string& pathToObj, 
+		const std::string& pathToVertShader, 
+		const std::string& pathToFragShader, 
+		glm::mat4 &&modelTransform
+	) : Mesh(pathToObj, pathToVertShader, pathToFragShader)
     {
 		this->modelTransform = modelTransform;
     }
@@ -19,9 +42,25 @@ namespace Assets
     {
         if(loader.valid())
             loader.wait();
+
+		vbo.SetBufferData(getVerticesSize(), getVertices().data(), GL_STATIC_DRAW);
+
+		VBLayout vbl;
+		vbl.Push<float>(3);
+		vbl.Push<float>(3);
+		vbl.Push<float>(2);
+		vbl.Push<float>(4);
+
+		vao.setLayout(vbo, vbl);
+		ebo.SetBufferData(getIndeciesSize(), getIndecies().data(), GL_STATIC_DRAW);
     }
 
-	void Mesh::Load(const std::string& path)
+    Viewer::ShaderProg& Mesh::GetShaderProg() const
+    {
+        return *prog;
+    }
+
+    void Mesh::Load(const std::string& path)
 	{
         tinyobj::ObjReaderConfig reader_config;
 

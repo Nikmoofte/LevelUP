@@ -7,10 +7,17 @@
 
 #include "VAO/VAO.hpp"
 #include "EBO/EBO.hpp"
-#include "ShaderProg/ShaderProg.hpp"
+//#include "ShaderProg/ShaderProg.hpp"
 
 
-
+namespace Assets
+{
+    class Mesh;
+}
+namespace Viewer
+{
+    class ShaderProg;
+}
 
 class Renderer
 {
@@ -19,7 +26,8 @@ public:
     Renderer(const Renderer&) = delete;
     ~Renderer() = delete;
     static void Clear();
-    static void Draw(const VAO&, const EBO&, const ShaderProg&);
+    static void Draw(const VAO&, const EBO&, const Viewer::ShaderProg&);
+    static void Draw(const Assets::Mesh& mesh);
 private:
 
 

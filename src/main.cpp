@@ -1,38 +1,30 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <iostream>
-
-#include "ShaderProg/ShaderProg.hpp"
-#include "Shader/Shader.hpp"
-#include <VBO/VBO.hpp>
-#include <VAO/VAO.hpp>
-#include <VAO/VBLayout.hpp>
-#include <EBO/EBO.hpp>
-#include <Renderer/Renderer.hpp>
-#include <Camera/Camera.hpp>
-#include <Mesh/Mesh.hpp>
-#include <Window/Window.hpp>
 #include <memory>
 #include <chrono>
+
+#include "Viewer/ShaderProg/ShaderProg.hpp"
+#include <Renderer/Renderer.hpp>
+#include <Camera/Camera.hpp>
+#include <Viewer/Window/Window.hpp>
+#include <Mesh/Mesh.hpp>
+#include "path.hpp"
+#include "config.hpp"
+
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "path.hpp"
-#include "config.hpp"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 
-//ToDo Попробовать поиграться с цветом
-//https://openframeworks.cc/documentation/glm/
 const glm::vec3 modelColor{0.5f};
-//settings end
 
 
 float fov = glm::radians(90.0f);
@@ -60,48 +52,32 @@ int main()
     }
     );
 
-    ShaderProg base(Path::Get().fromRoot({"shaders", "Base.vs"}), Path::Get().fromRoot({"shaders", "Base.fs"}));
+    Viewer::ShaderProg base(Path::Get().fromRoot({"shaders", "Base.vs"}), Path::Get().fromRoot({"shaders", "Base.fs"}));
     base.Use();
 
     //Изменяя строчку с .obj можно выьрать другой объект для отрисовки
     //ToDo попробовать другие объекты
     //https://sketchfab.com/feed -- здесь можно найти другие модельки. Нужны именно .obj
     //Можно просто выбрать из тех которые в папке 
-    Assets::Mesh mesh(Path::Get().fromRoot({"assets", "models", "Giant Octopus.obj"}).string());
-    Assets::Mesh chariot(Path::Get().fromRoot({"assets", "models", "Chariot.obj"}).string());
+    Assets::Mesh mesh(
+        Path::Get().fromRoot({"assets", "models", "Doom Slayer", "doomslayer.obj"}).string(),
+        base
+    );
+    Assets::Mesh chariot(
+        Path::Get().fromRoot({"assets", "models", "Chariot.obj"}).string(), 
+        base
+    );
 
-    VBO object;
-    VAO va;
     mesh.Wait();
     chariot.Wait();
-    VBLayout vbl;
-    object.SetBufferData(mesh.getVerticesSize(), mesh.getVertices().data(), GL_STATIC_DRAW);
 
-    vbl.Push<float>(3);
-    vbl.Push<float>(3);
-    vbl.Push<float>(2);
-    vbl.Push<float>(4);
-
-    va.setLayout(object, vbl);
-    EBO eb;
-    eb.SetBufferData(mesh.getIndeciesSize(), mesh.getIndecies().data(), GL_STATIC_DRAW);
-
-    VBO chariotVBO;
-    VAO chariotVa;
-
-    chariotVBO.SetBufferData(chariot.getVerticesSize(), chariot.getVertices().data(), GL_STATIC_DRAW);
-
-    chariotVa.setLayout(chariotVBO, vbl);
-    EBO chariotEb;
-    chariotEb.SetBufferData(chariot.getIndeciesSize(), chariot.getIndecies().data(), GL_STATIC_DRAW);
-    
     //Тут можно ворочать свет, если надо
     glUniform3fv(base.GetLocation("lightPos"), 1, glm::value_ptr(glm::vec3(-5.0f, 5.0f, -5.0f)));  
     glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glfwSwapInterval(1);
-    chariot.setModelMat(glm::translate(mesh.getModelMat(), glm::vec3(10.0f, 0.0f, 0.0f)));
-
+    mesh.setModelMat(glm::rotate(mesh.getModelMat(), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
+    mesh.setModelMat(glm::scale(mesh.getModelMat(), glm::vec3(5.0f)));
     while (!window.shouldClose())
     {
         cam.OnBeforeRender();
@@ -121,9 +97,9 @@ int main()
         glUniformMatrix4fv(base.GetLocation("total"), 1, GL_FALSE, glm::value_ptr(total));
         Renderer::Clear();
         glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(mesh.getModelMat()));
-        Renderer::Draw(va, eb, base);
+        Renderer::Draw(mesh);
         glUniformMatrix4fv(base.GetLocation("model"), 1, GL_FALSE, glm::value_ptr(chariot.getModelMat()));
-        Renderer::Draw(chariotVa, chariotEb, base);
+        Renderer::Draw(chariot);
 
         window.swapBuffers();
         window.pollEvents();
